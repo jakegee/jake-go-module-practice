@@ -6,6 +6,7 @@ import (
 	"image/png"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"sync"
@@ -190,4 +191,36 @@ func TestTools_Slugify(t *testing.T) {
 			t.Errorf("%s: wrong slug returned; expected %s but got %s", e.name, e.expected, slug)
 		}
 	}
+}
+
+func TestTools_DownloadStaticFile(t *testing.T) {
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/", nil)
+
+	var testTool Tools
+
+	testTool.DownloadStaticFile(rr, req, "./testdata", "pic.jpg", "cat.jpg")
+
+	res := rr.Result()
+	defer res.Body.Close()
+
+	if len(res.Header["Content-Length"]) > 0 {
+		contentLength := res.Header["Content-Length"][0]
+		fmt.Println("Content-Length:", contentLength) // Print to console
+		t.Log("Content-Length:", contentLength)       // Print to test output
+	} else {
+		fmt.Println("Content-Length header not found")
+		fmt.Println("All headers:", res.Header) // Print all headers to console
+		t.Log("Content-Length header not found")
+		t.Log("All headers:", res.Header) // Print all headers to test output
+	}
+
+	//if res.Header["Content-Disposition"][0] != "attachment; filename=\"pic.jpg\"" {
+	//	t.Error("wrong content disposition")
+	//}
+	//
+	//_, err := ioutil.ReadAll(res.Body)
+	//if err != nil {
+	//	t.Error(err)
+	//}
 }
